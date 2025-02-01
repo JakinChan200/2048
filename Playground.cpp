@@ -1,4 +1,9 @@
-#include <bits/stdc++.h>
+#include <vector>
+#include <iostream>
+#include <stdint.h>
+#include <stdlib.h>
+#include <algorithm>
+#include <cmath>
 
 using namespace std;
 
@@ -7,6 +12,11 @@ typedef uint16_t row_t;
 
 static const board_t ROW_MASK = 0xFFFFULL;
 static const board_t COL_MASK = 0x000F000F000F000FULL;
+
+struct trans_table_entry_t{
+    uint8_t depth;
+    float heuristic;
+};
 
 static inline void printBoard(board_t board){
     for(int i = 0; i < 4; i++){
@@ -19,6 +29,67 @@ static inline void printBoard(board_t board){
     }
     printf("\n");
 }
+
+struct TrieNode {
+    TrieNode * child[16];
+    trans_table_entry_t table;
+    TrieNode(){
+        table.depth = 0;
+        table.heuristic = 0;
+        for(auto &a : child){ 
+            a = nullptr;
+        }
+    }
+
+    void insert(board_t board, uint8_t depth, float heuristic){
+        TrieNode* node = this;
+        for(int i = 0; i < 15; i++){
+            if(node->child[board & 0xf] == nullptr){
+                node->child[board & 0xf] = new TrieNode;
+            }
+            node = node->child[board & 0xf];
+            board  = board >> 4;
+        }
+
+        if(node->child[board & 0xf] == nullptr){
+            node->child[board & 0xf] = new TrieNode;
+        }
+
+        node->child[board & 0xf]->table.depth = depth;
+        node->child[board & 0xf]->table.heuristic = heuristic;
+    }
+
+    trans_table_entry_t* search(board_t board){
+        TrieNode* node = this;
+
+        for(int i = 0; i < 15; i++){
+            if(node->child[board & 0xf] == nullptr){
+                return nullptr;
+            }
+            node = node->child[board & 0xf];
+            board >>= 4;
+        }
+
+        if(node->child[board & 0xf] == nullptr){
+            return nullptr;
+        }
+
+        return &node->child[board & 0xf]->table;
+    }
+};
+
+struct eval_state {
+    // trans_table_t trans_table; // transposition table, to cache previously-seen moves
+    TrieNode* root = new TrieNode;
+    int maxdepth;
+    int curdepth;
+    int cachehits;
+    unsigned long moves_evaled;
+    int depth_limit;
+
+    eval_state() : maxdepth(0), curdepth(0), cachehits(0), moves_evaled(0), depth_limit(0) {
+    }
+};
 
 static int count_empty(board_t x){
     if(x == 0){
@@ -214,7 +285,6 @@ static inline int countDistinctTiles(board_t board){
     bitset >>= 1;
 
     int count = 0;
-    bitset = 0x10111;
     while(bitset){ //Brian Kernighan's algorithm 
         printBits(bitset);
         bitset &= bitset - 1;
@@ -227,7 +297,17 @@ int main(int argc, char** argv){
     board_t board = 0x123456789AFCDFFULL;
     printBoard(board);
 
-    cout << countDistinctTiles(board) << endl;
+    eval_state state;
+    uint8_t depth = 6;
+    float res = 16;
+
+    state.root->insert(board, depth, res);
+
+    trans_table_entry_t *temp = state.root->search(board);
+
+    cout << temp->depth << " " << temp->heuristic << "\n";
+
+    // cout << countDistinctTiles(board) << endl;
 
     // board_t temp = 0x0ULL;
     // temp |= unpack_col(board & 0xFFFFULL);
@@ -236,10 +316,14 @@ int main(int argc, char** argv){
     // temp |= unpack_col(board >> 48 & 0xFFFFULL) << 12;
     // printBoard(temp);
 
-    init_tables();
+    // init_tables();
     // printBoard(transpose(board));
 
-    printBoard(execute_move_0(transpose(board)));
+    // printBoard(execute_move_0(transpose(board)));
 
     // cout << "answer: " << countEmpty(board);
+
+
+
+    return 0;
 }

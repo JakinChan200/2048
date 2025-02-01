@@ -6,23 +6,69 @@
 #include <string.h>
 #include <time.h>
 #include <algorithm>
+#include <iostream>
 
 #include "2048.h"
 
 // #include "config.h"
 
-// #if defined(HAVE_UNORDERED_MAP)
-//     #include <unordered_map>
-//     typedef std::unordered_map<board_t, trans_table_entry_t> trans_table_t;
-// #elif defined(HAVE_TR1_UNORDERED_MAP)
-//     #include <tr1/unordered_map>
-//     typedef std::tr1::unordered_map<board_t, trans_table_entry_t> trans_table_t;
-// #else
-//     #include <map>
-//     typedef std::map<board_t, trans_table_entry_t> trans_table_t;
-// #endif
 
-// typedef trans_table_entry_t trans_table_t[65536];
+struct TrieNode {
+    TrieNode * child[16];
+    trans_table_entry_t table;
+
+    TrieNode(){
+        table.depth = 0;
+        table.heuristic = 0;
+        for(auto &a : child){ 
+            a = nullptr;
+        }
+    }
+
+    ~TrieNode() {
+        for (auto &a : child) {
+            if (a != nullptr) {
+                delete a;
+            }
+        }
+    }
+
+    void insert(board_t board, uint8_t depth, float heuristic){
+        TrieNode* node = this;
+        for(int i = 0; i < 15; i++){
+            if(node->child[board & 0xf] == nullptr){
+                node->child[board & 0xf] = new TrieNode;
+            }
+            node = node->child[board & 0xf];
+            board  = board >> 4;
+        }
+
+        if(node->child[board & 0xf] == nullptr){
+            node->child[board & 0xf] = new TrieNode;
+        }
+
+        node->child[board & 0xf]->table.depth = depth;
+        node->child[board & 0xf]->table.heuristic = heuristic;
+    }
+
+    trans_table_entry_t* search(board_t board){
+        TrieNode* node = this;
+
+        for(int i = 0; i < 15; i++){
+            if(node->child[board & 0xf] == nullptr){
+                return nullptr;
+            }
+            node = node->child[board & 0xf];
+            board >>= 4;
+        }
+
+        if(node->child[board & 0xf] == nullptr){
+            return nullptr;
+        }
+
+        return &node->child[board & 0xf]->table;
+    }
+};
 
 void myprint(){
     printf("hello world\n");
@@ -278,6 +324,7 @@ static inline int count_distinct_tiles(board_t board) {
 
 struct eval_state {
     // trans_table_t trans_table; // transposition table, to cache previously-seen moves
+    TrieNode* root;
     int maxdepth;
     int curdepth;
     int cachehits;
@@ -285,6 +332,7 @@ struct eval_state {
     int depth_limit;
 
     eval_state() : maxdepth(0), curdepth(0), cachehits(0), moves_evaled(0), depth_limit(0) {
+        // root = new TrieNode;
     }
 };
 
@@ -325,6 +373,17 @@ static float score_tilechoose_node(eval_state &state, board_t board, float cprob
         state.maxdepth = std::max(state.curdepth, state.maxdepth);
         return score_heur_board(board);
     }
+
+    // if (state.curdepth < CACHE_DEPTH_LIMIT) {
+    //     trans_table_entry_t * temp = state.root->search(board);
+
+    //     if(temp != nullptr){
+    //         if(temp->depth <= state.curdepth){
+    //             state.cachehits++;
+    //             return temp->heuristic;
+    //         }
+    //     }
+    // }   
     // if (state.curdepth < CACHE_DEPTH_LIMIT) { //Check if it is a previously seen position
     //     const trans_table_t::iterator &i = state.trans_table.find(board);
     //     if (i != state.trans_table.end()) {
@@ -364,6 +423,11 @@ static float score_tilechoose_node(eval_state &state, board_t board, float cprob
     //     state.trans_table[board] = entry;//
     // }
 
+    // uint8_t tempDepth = state.curdepth;
+    // if (state.curdepth < CACHE_DEPTH_LIMIT) {
+    //     state.root->insert(board, tempDepth, res);
+    // }
+
     return res;
 }
 
@@ -398,15 +462,24 @@ static float _score_toplevel_move(eval_state &state, board_t board, int move) {
 float score_toplevel_move(board_t board, int move) {
     float res;
     eval_state state;
+
+    // TrieNode root;
+    // uint8_t depth = 2;
+    // res = 16;
+    // root.insert(board, depth, res);
+
+
     state.depth_limit = std::max(3, count_distinct_tiles(board) - 2);
 
     res = _score_toplevel_move(state, board, move);
 
+    // delete state.root;
     return res;
 }
 
 //Tries all 4 moves by calling score_toplevel_move
 int find_best_move(board_t board) {
+    // printf("%d\n", board);
     int move;
     float best = 0;
     int bestmove = -1;
@@ -417,7 +490,6 @@ int find_best_move(board_t board) {
     for(move=0; move<4; move++) {
         float res = score_toplevel_move(board, move);
 
-        // printf("breh");
         if(res > best) {
             best = res;
             bestmove = move;
@@ -426,6 +498,50 @@ int find_best_move(board_t board) {
 
     return bestmove;
 }
+
+int main(int argc, char** argv){
+    init_tables();
+    board_t board = 1114149ULL;
+
+    printf("%d\n", find_best_move(board));
+
+
+    // board = 0x123456789AFCDFFULL;
+    // printBoard(board);
+
+    // eval_state state;
+    // uint8_t depth = 2;
+    // float res = 16;
+
+    // state.root->insert(board, depth, res);
+
+    // trans_table_entry_t *temp = state.root->search(board);
+
+    // if(temp == nullptr){
+    //     std::cout << "breh" << std::endl;
+    // }
+    // std::cout << temp->depth << " " << temp->heuristic << "\n";
+    return 0;
+}
+
+/*
+struct eval_state {
+    // trans_table_t trans_table; // transposition table, to cache previously-seen moves
+    TrieNode* root;
+    int maxdepth;
+    int curdepth;
+    int cachehits;
+    unsigned long moves_evaled;
+    int depth_limit;
+
+    eval_state() : maxdepth(0), curdepth(0), cachehits(0), moves_evaled(0), depth_limit(0) {
+        // root = new TrieNode;
+    }
+};
+
+and the insert part covered, it is accessing parts not available
+
+*/
 
 //why are we transposing the table, but not transposing back when moving up and down
 //Cause we are doing more operations on it?

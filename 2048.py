@@ -160,7 +160,7 @@ def create_random_tile():
                 openSpots.append([i, j])
     if len(openSpots) != 0:
         open_spot_index = random.randint(0, len(openSpots)-1)
-        data[openSpots[open_spot_index][0]][openSpots[open_spot_index][1]] = str(random.choice([2,4]))
+        data[openSpots[open_spot_index][0]][openSpots[open_spot_index][1]] = "2" if random.random() < 0.9 else "4"
     
 def check_if_end():
     global data

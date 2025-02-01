@@ -9,78 +9,65 @@
 #include <iostream>
 
 #include "2048.h"
-// #include <map>
-// typedef std::map<board_t, trans_table_entry_t> trans_table_t;
+#include <map>
+typedef std::map<board_t, trans_table_entry_t> trans_table_t;
 
-// #include "config.h"
+// struct TrieNode {
+//     TrieNode * child[16];
+//     trans_table_entry_t table;
 
-#if defined(HAVE_UNORDERED_MAP)
-    #include <unordered_map>
-    typedef std::unordered_map<board_t, trans_table_entry_t> trans_table_t;
-#elif defined(HAVE_TR1_UNORDERED_MAP)
-    #include <tr1/unordered_map>
-    typedef std::tr1::unordered_map<board_t, trans_table_entry_t> trans_table_t;
-#else
-    #include <map>
-    typedef std::map<board_t, trans_table_entry_t> trans_table_t;
-#endif
+//     TrieNode(){
+//         table.depth = 0;
+//         table.heuristic = 0;
+//         for(auto &a : child){ 
+//             a = nullptr;
+//         }
+//     }
 
-struct TrieNode {
-    TrieNode * child[16];
-    trans_table_entry_t table;
+//     ~TrieNode() {
+//         for (auto &a : child) {
+//             if (a != nullptr) {
+//                 delete a;
+//             }
+//         }
+//     }
 
-    TrieNode(){
-        table.depth = 0;
-        table.heuristic = 0;
-        for(auto &a : child){ 
-            a = nullptr;
-        }
-    }
+//     void insert(board_t board, uint8_t depth, float heuristic){
+//         TrieNode* node = this;
+//         for(int i = 0; i < 15; i++){
+//             if(node->child[board & 0xf] == nullptr){
+//                 node->child[board & 0xf] = new TrieNode;
+//             }
+//             node = node->child[board & 0xf];
+//             board  = board >> 4;
+//         }
 
-    ~TrieNode() {
-        for (auto &a : child) {
-            if (a != nullptr) {
-                delete a;
-            }
-        }
-    }
+//         if(node->child[board & 0xf] == nullptr){
+//             node->child[board & 0xf] = new TrieNode;
+//         }
 
-    void insert(board_t board, uint8_t depth, float heuristic){
-        TrieNode* node = this;
-        for(int i = 0; i < 15; i++){
-            if(node->child[board & 0xf] == nullptr){
-                node->child[board & 0xf] = new TrieNode;
-            }
-            node = node->child[board & 0xf];
-            board  = board >> 4;
-        }
+//         node->child[board & 0xf]->table.depth = depth;
+//         node->child[board & 0xf]->table.heuristic = heuristic;
+//     }
 
-        if(node->child[board & 0xf] == nullptr){
-            node->child[board & 0xf] = new TrieNode;
-        }
+//     trans_table_entry_t* search(board_t board){
+//         TrieNode* node = this;
 
-        node->child[board & 0xf]->table.depth = depth;
-        node->child[board & 0xf]->table.heuristic = heuristic;
-    }
+//         for(int i = 0; i < 15; i++){
+//             if(node->child[board & 0xf] == nullptr){
+//                 return nullptr;
+//             }
+//             node = node->child[board & 0xf];
+//             board >>= 4;
+//         }
 
-    trans_table_entry_t* search(board_t board){
-        TrieNode* node = this;
+//         if(node->child[board & 0xf] == nullptr){
+//             return nullptr;
+//         }
 
-        for(int i = 0; i < 15; i++){
-            if(node->child[board & 0xf] == nullptr){
-                return nullptr;
-            }
-            node = node->child[board & 0xf];
-            board >>= 4;
-        }
-
-        if(node->child[board & 0xf] == nullptr){
-            return nullptr;
-        }
-
-        return &node->child[board & 0xf]->table;
-    }
-};
+//         return &node->child[board & 0xf]->table;
+//     }
+// };
 
 void myprint(){
     printf("hello world\n");
@@ -511,30 +498,30 @@ int find_best_move(board_t board) {
     return bestmove;
 }
 
-int main(int argc, char** argv){
-    init_tables();
-    board_t board = 1114149ULL;
+// int main(int argc, char** argv){
+//     init_tables();
+//     board_t board = 1114149ULL;
 
-    printf("%d\n", find_best_move(board));
+//     printf("%d\n", find_best_move(board));
 
 
-    // board = 0x123456789AFCDFFULL;
-    // printBoard(board);
+//     // board = 0x123456789AFCDFFULL;
+//     // printBoard(board);
 
-    // eval_state state;
-    // uint8_t depth = 2;
-    // float res = 16;
+//     // eval_state state;
+//     // uint8_t depth = 2;
+//     // float res = 16;
 
-    // state.root->insert(board, depth, res);
+//     // state.root->insert(board, depth, res);
 
-    // trans_table_entry_t *temp = state.root->search(board);
+//     // trans_table_entry_t *temp = state.root->search(board);
 
-    // if(temp == nullptr){
-    //     std::cout << "breh" << std::endl;
-    // }
-    // std::cout << temp->depth << " " << temp->heuristic << "\n";
-    return 0;
-}
+//     // if(temp == nullptr){
+//     //     std::cout << "breh" << std::endl;
+//     // }
+//     // std::cout << temp->depth << " " << temp->heuristic << "\n";
+//     return 0;
+// }
 
 /*
 struct eval_state {
@@ -561,4 +548,7 @@ and the insert part covered, it is accessing parts not available
 //https://discuss.python.org/t/ctypes-can-not-load-dll-in-which-some-struct-has-constructor-or-destructor/60960
 
 //g++ -m64 -shared -o botLib.dll 2048.cpp
+//python 2048.py
+
+//g++ -m64 -O4 -shared -o botLib.dll 2048.cpp -static -static-libgcc -static-libstdc++
 //python 2048.py

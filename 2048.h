@@ -57,7 +57,7 @@ void myprint(void);
 void init_tables();
 board_t execute_move(int move, board_t board);
 
-typedef int (*get_move_func_t)(board_t);
+// typedef int (*get_move_func_t)(board_t);
 int find_best_move(board_t board);
 
 #ifdef __cplusplus

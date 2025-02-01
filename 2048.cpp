@@ -9,9 +9,21 @@
 #include <iostream>
 
 #include "2048.h"
+// #include <map>
+// typedef std::map<board_t, trans_table_entry_t> trans_table_t;
 
 // #include "config.h"
 
+#if defined(HAVE_UNORDERED_MAP)
+    #include <unordered_map>
+    typedef std::unordered_map<board_t, trans_table_entry_t> trans_table_t;
+#elif defined(HAVE_TR1_UNORDERED_MAP)
+    #include <tr1/unordered_map>
+    typedef std::tr1::unordered_map<board_t, trans_table_entry_t> trans_table_t;
+#else
+    #include <map>
+    typedef std::map<board_t, trans_table_entry_t> trans_table_t;
+#endif
 
 struct TrieNode {
     TrieNode * child[16];
@@ -323,8 +335,8 @@ static inline int count_distinct_tiles(board_t board) {
 /* Optimizing the game */
 
 struct eval_state {
-    // trans_table_t trans_table; // transposition table, to cache previously-seen moves
-    TrieNode* root;
+    trans_table_t trans_table; // transposition table, to cache previously-seen moves
+    // TrieNode* root;
     int maxdepth;
     int curdepth;
     int cachehits;
@@ -384,23 +396,23 @@ static float score_tilechoose_node(eval_state &state, board_t board, float cprob
     //         }
     //     }
     // }   
-    // if (state.curdepth < CACHE_DEPTH_LIMIT) { //Check if it is a previously seen position
-    //     const trans_table_t::iterator &i = state.trans_table.find(board);
-    //     if (i != state.trans_table.end()) {
-    //         trans_table_entry_t entry = i->second;
-    //         /*
-    //         return heuristic from transposition table only if it means that
-    //         the node will have been evaluated to a minimum depth of state.depth_limit.
-    //         This will result in slightly fewer cache hits, but should not impact the
-    //         strength of the ai negatively.
-    //         */
-    //         if(entry.depth <= state.curdepth)
-    //         {
-    //             state.cachehits++;
-    //             return entry.heuristic;
-    //         }
-    //     }
-    // }
+    if (state.curdepth < CACHE_DEPTH_LIMIT) { //Check if it is a previously seen position
+        const trans_table_t::iterator &i = state.trans_table.find(board);
+        if (i != state.trans_table.end()) {
+            trans_table_entry_t entry = i->second;
+            /*
+            return heuristic from transposition table only if it means that
+            the node will have been evaluated to a minimum depth of state.depth_limit.
+            This will result in slightly fewer cache hits, but should not impact the
+            strength of the ai negatively.
+            */
+            if(entry.depth <= state.curdepth)
+            {
+                state.cachehits++;
+                return entry.heuristic;
+            }
+        }
+    }
 
     int num_open = count_empty(board);
     cprob /= num_open;
@@ -418,10 +430,10 @@ static float score_tilechoose_node(eval_state &state, board_t board, float cprob
     }
     res = res / num_open;
 
-    // if (state.curdepth < CACHE_DEPTH_LIMIT) {
-    //     trans_table_entry_t entry = {static_cast<uint8_t>(state.curdepth), res};
-    //     state.trans_table[board] = entry;//
-    // }
+    if (state.curdepth < CACHE_DEPTH_LIMIT) {
+        trans_table_entry_t entry = {static_cast<uint8_t>(state.curdepth), res};
+        state.trans_table[board] = entry;//
+    }
 
     // uint8_t tempDepth = state.curdepth;
     // if (state.curdepth < CACHE_DEPTH_LIMIT) {
@@ -546,7 +558,7 @@ and the insert part covered, it is accessing parts not available
 //why are we transposing the table, but not transposing back when moving up and down
 //Cause we are doing more operations on it?
 
-
+//https://discuss.python.org/t/ctypes-can-not-load-dll-in-which-some-struct-has-constructor-or-destructor/60960
 
 //g++ -m64 -shared -o botLib.dll 2048.cpp
 //python 2048.py

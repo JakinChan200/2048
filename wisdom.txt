@@ -1,0 +1,12 @@
+"inline" in the header hints at the compiler to try to embed the function instead of calling it. Great for small functions that are called frequently
+
+ULL as the suffix of a numeric literal makes it an unsigned long long
+
+printf vs cout
+    printf and cout are seperate, but printf is faster because it is lower level and doesn't do error checking. 
+    Synchronization between the two makes it slow as well, but "std::ios_base::sync_with_stdio(false);" turns it off, making cout faster. Do not use if you mix cout with other stuff
+    https://stackoverflow.com/questions/2872543/printf-vs-cout-in-c
+
+Make sure the executable C++ and the Python is both m64
+
+C does not have a map, but ctypes extends C, but can run C++?

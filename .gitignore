@@ -3,3 +3,7 @@ Makefile.in
 *.dll
 
 __pycache__/
+
+.vscode/
+
+a.exe

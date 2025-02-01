@@ -5,10 +5,9 @@ import random
 import copy
 import threading
 
-from botLib import botLib, convertBoardToC
-
+from botLib import botLib, to_c_board, from_c_board
 # import ctypes
-# botLib = ctypes.CDLL('C:/Users/Jakin/TeamName/botLib.dll')
+# botLib = ctypes.CDLL('C:/Users/Jakin/TeamName/bin/2048.dll')
 
 
 botLib.myprint()
@@ -22,7 +21,7 @@ print(botLib.add(5, 3))
 bgColor = "#AADB1E"
 
 data = [["", "", "", ""], ["", "", "", ""], ["", "", "", ""], ["", "", "", ""]]
-color = [["2", "#eee4da"], ["4", "#eee1c9"], ["8", "#f3b27a"], ["16", "#f69664"], ["32", "#f77c5f"], ["64", "#f75f3b"], ["128", "#edd073"], ["256", "#edcc62"], ["512", "#edc950"], ["1024", "#aa7dfa"], ["2048", "#aa7dfa"]]
+color = [["", "#aa7dfa"], ["2", "#eee4da"], ["4", "#eee1c9"], ["8", "#f3b27a"], ["16", "#f69664"], ["32", "#f77c5f"], ["64", "#f75f3b"], ["128", "#edd073"], ["256", "#edcc62"], ["512", "#edc950"], ["1024", "#edc53f"], ["2048", "#edc12e"]]
 player_score = 0 #every time tiles combine, add it to the current score
 max_player_score = 0
 #data = [["4", "4", "2", "4"], ["2", "8", "", ""], ["2", "4", "4", "2"], ["2", "16", "4", "4"]]
@@ -71,7 +70,7 @@ def create_text_and_buttons(screen):
 
     play_bot_button = tk.Button(screen, text = "AI Play", bg = "#d342f8") #AI Play button located at 1,2
     play_bot_button.grid(row = 1, column = 2, sticky = "ew", pady = (0,30))
-    play_bot_button.bind("<Button-1>", lambda event: change_color(play_bot_button,event, screen, True))
+    play_bot_button.bind("<Button-1>", lambda event: change_color(play_bot_button, event, screen, True))
     play_bot_button.bind("<ButtonRelease-1>", lambda event: change_back_color(play_bot_button,event))
 
     score_text = tk.Label(screen,text = "Current Score: 0", bg = bgColor, font = ("Monospace",11))
@@ -92,7 +91,7 @@ def create_grid(screen):
 
     for i in range(4): #Create 4 by 4 grid
         for j in range(4):
-            backgroundColor = "#aa7dfa"
+            backgroundColor = "#3d3a32"
             dij = data[i][j]
             if dij in color_map:
                 backgroundColor = color_map[dij]
@@ -161,7 +160,7 @@ def create_random_tile():
                 openSpots.append([i, j])
     if len(openSpots) != 0:
         open_spot_index = random.randint(0, len(openSpots)-1)
-        data[openSpots[open_spot_index][0]][openSpots[open_spot_index][1]] = str(random.choice([2,4]))
+        data[openSpots[open_spot_index][0]][openSpots[open_spot_index][1]] = "2" if random.random() < 0.9 else "4"
     
 def check_if_end():
     global data
@@ -604,97 +603,119 @@ def minimax(board, depth, is_max):
             curr_val = min(curr_val, single_board_val)
         return curr_val
 
+def getBestMove(x):
+    board = to_c_board(x);
+    move = botLib.find_best_move(board)
+    return move
+
 def bot_plays(event, screen): #When you press AI plays button, will make the moves
     #curr_board = data.copy()
+    
     while True:
         curr_board = copy.deepcopy(data)
-        screen.update()
-        all_moves = {}
-        lock = threading.Lock()
-
-        #Move = Call Minimax for the move
-        #Simulates the move Right
-        def move_right_local2(curr_board):
-            board_after_right_move = move_right_local(curr_board)
-            right_move_score = minimax(board_after_right_move, 0 ,True)
-            if (board_after_right_move != curr_board):
-                with lock:
-                    all_moves['r'] = right_move_score
-        t1 = threading.Thread(target=move_right_local2, args=(curr_board,))
-        #board_after_right_move = move_right_local(curr_board)
-        #right_move_score = minimax(board_after_right_move, 0 ,True)
-        #if (board_after_right_move != curr_board):
-        #    all_moves['r'] = right_move_score
-
-        #Simulates the move Left
-        def move_left_local2(curr_board):
-            board_after_left_move = move_left_local(curr_board)
-            left_move_score = minimax(board_after_left_move, 0 ,True)   #Calls Minimax and holds the value EX: (left, 2.0)
-            if (board_after_left_move != curr_board):
-                with lock:
-                    all_moves['l'] = left_move_score
-        t2 = threading.Thread(target=move_left_local2, args=(curr_board,))
-        #board_after_left_move = move_left_local(curr_board)
-        #left_move_score = minimax(board_after_left_move, 0 ,True)   #Calls Minimax and holds the value EX: (left, 2.0)
-        #if (board_after_left_move != curr_board):
-        #    all_moves['l'] = left_move_score
-
-        #Simulates the move Up
-        def move_up_local2(curr_board):  
-            board_after_up_move = move_up_local(curr_board)
-            up_move_score = minimax(board_after_up_move, 0 ,True)
-            if (board_after_up_move != curr_board):
-                with lock:
-                    all_moves['u'] = up_move_score
-        t3 = threading.Thread(target=move_up_local2, args=(curr_board,))
-        #board_after_up_move = move_up_local(curr_board)
-        #up_move_score = minimax(board_after_up_move, 0 ,True)
-        #Calls Minimax and holds the value EX: (up, 15.0)
-        #if (board_after_up_move != curr_board):
-        #    all_moves['u'] = up_move_score
-
-        #Simulates the move Down
-        def move_down_local2(curr_board):
-            board_after_down_move = move_down_local(curr_board)
-            down_move_score = minimax(board_after_down_move, 0 ,True)
-            if (board_after_down_move != curr_board):
-                with lock:
-                    all_moves['d'] = down_move_score
-        t4 = threading.Thread(target=move_down_local2, args=(curr_board,))
-        #board_after_down_move = move_down_local(curr_board)
-        #down_move_score = minimax(board_after_down_move, 0 ,True)
-        #Calls Minimax and holds the value EX: (down, 20.0)
-        #if (board_after_down_move != curr_board):
-        #    all_moves['d'] = down_move_score
-
-        t1.start()
-        t2.start()
-        t3.start()
-        t4.start()
-
-        #threads join here
-        t1.join()
-        t2.join()
-        t3.join()
-        t4.join()
+        move = getBestMove(curr_board)
             
-        #Picks AND choose the move with highest value EX: Picks down and then does it
-        #use existing functions to make moves
-        bot_move = max(all_moves, key=all_moves.get) #key
-        if bot_move == 'r':
-            on_right_key(event, screen)
-            #time.sleep(1)
-        elif bot_move == 'l':
-            on_left_key(event,screen)
-            #time.sleep(1)
-        elif bot_move == 'u':
+        if move == 0:
             on_up_key(event, screen)
-            #time.sleep(1)
-        elif bot_move == 'd':
+        elif move == 1:
             on_down_key(event,screen)
-            #time.sleep(1)
+        elif move == 2:
+            on_left_key(event, screen)
+        elif move == 3:
+            on_right_key(event,screen)
         else:
             KeyError
+        screen.update()
+            
+    # while True:
+    #     curr_board = copy.deepcopy(data)
+    #     screen.update()
+    #     all_moves = {}
+    #     lock = threading.Lock()
+
+    #     #Move = Call Minimax for the move
+    #     #Simulates the move Right
+    #     def move_right_local2(curr_board):
+    #         board_after_right_move = move_right_local(curr_board)
+    #         right_move_score = minimax(board_after_right_move, 0 ,True)
+    #         if (board_after_right_move != curr_board):
+    #             with lock:
+    #                 all_moves['r'] = right_move_score
+    #     t1 = threading.Thread(target=move_right_local2, args=(curr_board,))
+    #     #board_after_right_move = move_right_local(curr_board)
+    #     #right_move_score = minimax(board_after_right_move, 0 ,True)
+    #     #if (board_after_right_move != curr_board):
+    #     #    all_moves['r'] = right_move_score
+
+    #     #Simulates the move Left
+    #     def move_left_local2(curr_board):
+    #         board_after_left_move = move_left_local(curr_board)
+    #         left_move_score = minimax(board_after_left_move, 0 ,True)   #Calls Minimax and holds the value EX: (left, 2.0)
+    #         if (board_after_left_move != curr_board):
+    #             with lock:
+    #                 all_moves['l'] = left_move_score
+    #     t2 = threading.Thread(target=move_left_local2, args=(curr_board,))
+    #     #board_after_left_move = move_left_local(curr_board)
+    #     #left_move_score = minimax(board_after_left_move, 0 ,True)   #Calls Minimax and holds the value EX: (left, 2.0)
+    #     #if (board_after_left_move != curr_board):
+    #     #    all_moves['l'] = left_move_score
+
+    #     #Simulates the move Up
+    #     def move_up_local2(curr_board):  
+    #         board_after_up_move = move_up_local(curr_board)
+    #         up_move_score = minimax(board_after_up_move, 0 ,True)
+    #         if (board_after_up_move != curr_board):
+    #             with lock:
+    #                 all_moves['u'] = up_move_score
+    #     t3 = threading.Thread(target=move_up_local2, args=(curr_board,))
+    #     #board_after_up_move = move_up_local(curr_board)
+    #     #up_move_score = minimax(board_after_up_move, 0 ,True)
+    #     #Calls Minimax and holds the value EX: (up, 15.0)
+    #     #if (board_after_up_move != curr_board):
+    #     #    all_moves['u'] = up_move_score
+
+    #     #Simulates the move Down
+    #     def move_down_local2(curr_board):
+    #         board_after_down_move = move_down_local(curr_board)
+    #         down_move_score = minimax(board_after_down_move, 0 ,True)
+    #         if (board_after_down_move != curr_board):
+    #             with lock:
+    #                 all_moves['d'] = down_move_score
+    #     t4 = threading.Thread(target=move_down_local2, args=(curr_board,))
+    #     #board_after_down_move = move_down_local(curr_board)
+    #     #down_move_score = minimax(board_after_down_move, 0 ,True)
+    #     #Calls Minimax and holds the value EX: (down, 20.0)
+    #     #if (board_after_down_move != curr_board):
+    #     #    all_moves['d'] = down_move_score
+
+    #     t1.start()
+    #     t2.start()
+    #     t3.start()
+    #     t4.start()
+
+    #     #threads join here
+    #     t1.join()
+    #     t2.join()
+    #     t3.join()
+    #     t4.join()
+            
+    #     #Picks AND choose the move with highest value EX: Picks down and then does it
+    #     #use existing functions to make moves
+    #     bot_move = max(all_moves, key=all_moves.get) #key
+    #     if bot_move == 'r':
+    #         on_right_key(event, screen)
+    #         #time.sleep(1)
+    #     elif bot_move == 'l':
+    #         on_left_key(event,screen)
+    #         #time.sleep(1)
+    #     elif bot_move == 'u':
+    #         on_up_key(event, screen)
+    #         #time.sleep(1)
+    #     elif bot_move == 'd':
+    #         on_down_key(event,screen)
+    #         #time.sleep(1)
+    #     else:
+    #         KeyError
             
         #On X key functions already checks if the game is ended
 

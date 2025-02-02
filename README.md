@@ -24,7 +24,7 @@ The goal is to maximize the highest tile on the board by combining pairs of tile
 ## Images
 Bot Playing:
 
-![Bot Playing Gif](images/2048.gif)
+![Bot Playing Gif](images/2048C++.gif)
 
 Example Game Screen:
 

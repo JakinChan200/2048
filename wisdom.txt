@@ -9,4 +9,17 @@ printf vs cout
 
 Make sure the executable C++ and the Python is both m64
 
-C does not have a map, but ctypes extends C, but can run C++?
+Interesting way of counting how many 0 nibbles are in an unsigned 64 bit integer
+https://stackoverflow.com/questions/38225571/count-number-of-zero-nibbles-in-an-unsigned-64-bit-integer
+
+Brian Kernighan's algorithm
+Interesting way of counting the number of 1s bits at Olog(n)
+https://stackoverflow.com/questions/12380478/bits-counting-algorithm-brian-kernighan-in-an-integer-time-complexity
+
+Make sure all your dependencies are there heh
+
+Other Links
+https://stackoverflow.com/questions/145270/calling-c-c-from-python
+https://github.com/nneonneo/2048-ai/blob/master/2048.py#L71
+https://stackoverflow.com/questions/5081875/ctypes-beginner
+https://discuss.python.org/t/ctypes-can-not-load-dll-in-which-some-struct-has-constructor-or-destructor/60960

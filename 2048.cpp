@@ -12,63 +12,6 @@
 #include <map>
 typedef std::map<board_t, trans_table_entry_t> trans_table_t;
 
-// struct TrieNode {
-//     TrieNode * child[16];
-//     trans_table_entry_t table;
-
-//     TrieNode(){
-//         table.depth = 0;
-//         table.heuristic = 0;
-//         for(auto &a : child){ 
-//             a = nullptr;
-//         }
-//     }
-
-//     ~TrieNode() {
-//         for (auto &a : child) {
-//             if (a != nullptr) {
-//                 delete a;
-//             }
-//         }
-//     }
-
-//     void insert(board_t board, uint8_t depth, float heuristic){
-//         TrieNode* node = this;
-//         for(int i = 0; i < 15; i++){
-//             if(node->child[board & 0xf] == nullptr){
-//                 node->child[board & 0xf] = new TrieNode;
-//             }
-//             node = node->child[board & 0xf];
-//             board  = board >> 4;
-//         }
-
-//         if(node->child[board & 0xf] == nullptr){
-//             node->child[board & 0xf] = new TrieNode;
-//         }
-
-//         node->child[board & 0xf]->table.depth = depth;
-//         node->child[board & 0xf]->table.heuristic = heuristic;
-//     }
-
-//     trans_table_entry_t* search(board_t board){
-//         TrieNode* node = this;
-
-//         for(int i = 0; i < 15; i++){
-//             if(node->child[board & 0xf] == nullptr){
-//                 return nullptr;
-//             }
-//             node = node->child[board & 0xf];
-//             board >>= 4;
-//         }
-
-//         if(node->child[board & 0xf] == nullptr){
-//             return nullptr;
-//         }
-
-//         return &node->child[board & 0xf]->table;
-//     }
-// };
-
 void myprint(){
     printf("hello world\n");
 }
@@ -303,16 +246,19 @@ static inline int get_max_rank(board_t board) {
 
 static inline int count_distinct_tiles(board_t board) {
     uint16_t bitset = 0;
-    while (board) {
-        bitset |= 1<<(board & 0xf);
+    while(board){
+        bitset |= 1 << (board & 0xf);
         board >>= 4;
     }
 
-    // Don't count empty tiles.
     bitset >>= 1;
 
+    //Brian Kernighan's algorithm
+    //https://stackoverflow.com/questions/12380478/bits-counting-algorithm-brian-kernighan-in-an-integer-time-complexity
+    //Subtracting 1 flips the rightmost set bit. We are just tracking how many times it does that
+    //It also inverts the bits to the right, so the &= makes sure it doesn't affect the count
     int count = 0;
-    while (bitset) {
+    while(bitset){
         bitset &= bitset - 1;
         count++;
     }
@@ -462,17 +408,10 @@ float score_toplevel_move(board_t board, int move) {
     float res;
     eval_state state;
 
-    // TrieNode root;
-    // uint8_t depth = 2;
-    // res = 16;
-    // root.insert(board, depth, res);
-
-
     state.depth_limit = std::max(3, count_distinct_tiles(board) - 2);
 
     res = _score_toplevel_move(state, board, move);
 
-    // delete state.root;
     return res;
 }
 
@@ -523,29 +462,66 @@ int find_best_move(board_t board) {
 //     return 0;
 // }
 
-/*
-struct eval_state {
-    // trans_table_t trans_table; // transposition table, to cache previously-seen moves
-    TrieNode* root;
-    int maxdepth;
-    int curdepth;
-    int cachehits;
-    unsigned long moves_evaled;
-    int depth_limit;
+// struct TrieNode {
+//     TrieNode * child[16];
+//     trans_table_entry_t table;
 
-    eval_state() : maxdepth(0), curdepth(0), cachehits(0), moves_evaled(0), depth_limit(0) {
-        // root = new TrieNode;
-    }
-};
+//     TrieNode(){
+//         table.depth = 0;
+//         table.heuristic = 0;
+//         for(auto &a : child){ 
+//             a = nullptr;
+//         }
+//     }
 
-and the insert part covered, it is accessing parts not available
+//     ~TrieNode() {
+//         for (auto &a : child) {
+//             if (a != nullptr) {
+//                 delete a;
+//             }
+//         }
+//     }
 
-*/
+//     void insert(board_t board, uint8_t depth, float heuristic){
+//         TrieNode* node = this;
+//         for(int i = 0; i < 15; i++){
+//             if(node->child[board & 0xf] == nullptr){
+//                 node->child[board & 0xf] = new TrieNode;
+//             }
+//             node = node->child[board & 0xf];
+//             board  = board >> 4;
+//         }
+
+//         if(node->child[board & 0xf] == nullptr){
+//             node->child[board & 0xf] = new TrieNode;
+//         }
+
+//         node->child[board & 0xf]->table.depth = depth;
+//         node->child[board & 0xf]->table.heuristic = heuristic;
+//     }
+
+//     trans_table_entry_t* search(board_t board){
+//         TrieNode* node = this;
+
+//         for(int i = 0; i < 15; i++){
+//             if(node->child[board & 0xf] == nullptr){
+//                 return nullptr;
+//             }
+//             node = node->child[board & 0xf];
+//             board >>= 4;
+//         }
+
+//         if(node->child[board & 0xf] == nullptr){
+//             return nullptr;
+//         }
+
+//         return &node->child[board & 0xf]->table;
+//     }
+// };
+
 
 //why are we transposing the table, but not transposing back when moving up and down
 //Cause we are doing more operations on it?
-
-//https://discuss.python.org/t/ctypes-can-not-load-dll-in-which-some-struct-has-constructor-or-destructor/60960
 
 //g++ -m64 -shared -o botLib.dll 2048.cpp
 //python 2048.py

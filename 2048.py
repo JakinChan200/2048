@@ -5,10 +5,7 @@ import random
 import copy
 import threading
 
-from botLib import botLib, to_c_board, from_c_board
-# import ctypes
-# botLib = ctypes.CDLL('C:/Users/Jakin/TeamName/bin/2048.dll')
-
+from botLib import botLib, to_c_board
 
 botLib.myprint()
 print(botLib.add(5, 3))

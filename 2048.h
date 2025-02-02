@@ -1,16 +1,4 @@
-#include <stdlib.h>
-// #include "platdefs.h"
-
-/* The fundamental trick: the 4x4 board is represented as a 64-bit word,
- * with each board square packed into a single 4-bit nibble.
- * 
- * The maximum possible board value that can be supported is 32768 (2^15), but
- * this is a minor limitation as achieving 65536 is highly unlikely under normal circumstances.
- * 
- * The space and computation savings from using this representation should be significant.
- * 
- * The nibble shift can be computed as (r,c) -> shift (4*r + c). That is, (0,0) is the LSB.
- */
+#include <stdlib.h> 
 
 typedef uint64_t board_t;
 typedef uint16_t row_t;
@@ -55,7 +43,6 @@ int add(int num, int move);
 void myprint(void);
 
 void init_tables();
-board_t execute_move(int move, board_t board);
 
 // typedef int (*get_move_func_t)(board_t);
 int find_best_move(board_t board);

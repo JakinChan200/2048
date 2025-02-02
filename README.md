@@ -19,6 +19,7 @@ The goal is to maximize the highest tile on the board by combining pairs of tile
 
 ## Tech Stack
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
+![C++](https://img.shields.io/badge/c++-%2300599C.svg?style=for-the-badge&logo=c%2B%2B&logoColor=white)
 
 ## Images
 Bot Playing:
@@ -34,8 +35,24 @@ Game Over Screen:
 ![Game Over Screen](images/GameOver.png)
 
 ## Usage
+### Setup and Run:
+1. Clone the repo
+   ```sh
+   git clone https://github.com/JakinChan200/2048.git
+   ```
+ 
+2. Compile the C++ code
+    ```sh
+    g++ -O4 -shared -o botLib.dll 2048.cpp -static -static-libgcc -static-libstdc++
+    ```
+
+4. Run
+   ```sh
+   python 2048.py
+   ```
+
 ### Player Play Mode
-Click `You Play` and use the &uarr; &darr; &larr; &rarr; keys to merge similar tiles. Try to get the 2048 tile!
+1. Click `You Play` and use the &uarr; &darr; &larr; &rarr; keys to merge similar tiles. Try to get the 2048 tile!
 
 ### Bot Mode
-Click `AI Play` and watch as it attempts to get the 2048 tile!
+1. Click `AI Play` and watch as it attempts to get the 2048 tile!

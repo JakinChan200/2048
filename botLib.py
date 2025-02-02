@@ -1,15 +1,12 @@
 import ctypes
+import os
 
-
-botLib = ctypes.CDLL('C:/Users/Jakin/TeamName/botLib.dll')
+dll_path = os.path.abspath("botLib.dll")
+botLib = ctypes.CDLL(dll_path)
 
 botLib.init_tables()
 
 botLib.find_best_move.argtypes = [ctypes.c_uint64]
-# botLib.score_toplevel_move.argtypes = [ctypes.c_uint64, ctypes.c_int]
-# botLib.score_toplevel_move.restype = ctypes.c_float
-botLib.execute_move.argtypes = [ctypes.c_int, ctypes.c_uint64]
-botLib.execute_move.restype = ctypes.c_uint64
 
 powerDict = {
     "" : 0,
@@ -38,25 +35,6 @@ def to_c_board(m):
             board |= int(powerDict[c]) << (4*i)
             i += 1
     return board
-
-def from_c_board(n):
-    board = []
-    i = 0
-    for ri in range(4):
-        row = []
-        for ci in range(4):
-            row.append((n >> (4 * i)) & 0xf)
-            i += 1
-        board.append(row)
-    return board
-
-
-
-# botLib.add.argtypes = [ctypes.c_int, ctypes.c_int]
-# botLib.add.restype = ctypes.c_int
-
-# def add(self, a, b):
-#     return self.lib.add(a, b)
 
 
 #https://stackoverflow.com/questions/145270/calling-c-c-from-python
